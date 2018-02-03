@@ -55,6 +55,8 @@ public class PCLUtils
 
         public Supplier<PCLData> from(InputStream inputStream, Charset encoding);
 
+        public Supplier<PCLData> fromCacheOnly();
+
         public PCLDataLoader usingLocalCache();
 
         public PCLDataLoader usingFileCache(File cacheFile);
@@ -65,7 +67,7 @@ public class PCLUtils
         return new PCLDataLoader()
         {
             private Supplier<PCLDataImpl> rawResolver = () -> null;
-            private Supplier<PCLData>    resolver    = () -> this.resolve();
+            private Supplier<PCLData>     resolver    = () -> this.resolve();
 
             private PCLDataImpl resolve()
             {
@@ -202,6 +204,13 @@ public class PCLUtils
             {
                 return this.from(new InputStreamReader(new BufferedInputStream(inputStream), encoding));
             }
+
+            @Override
+            public Supplier<PCLData> fromCacheOnly()
+            {
+                return this.resolver;
+            }
+
         };
     }
 }
