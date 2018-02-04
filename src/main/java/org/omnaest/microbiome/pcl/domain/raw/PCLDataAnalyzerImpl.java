@@ -16,6 +16,7 @@ import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.MathUtils;
 import org.omnaest.utils.MathUtils.AverageAndStandardDeviation;
+import org.omnaest.utils.element.bi.BiElement;
 
 public class PCLDataAnalyzerImpl implements PCLDataAnalyzer
 {
@@ -56,7 +57,14 @@ public class PCLDataAnalyzerImpl implements PCLDataAnalyzer
     }
 
     @Override
-    public Map<Species, AverageAndStandardDeviation> calculateSpeciesAverageExpressionFor(SampleType sampleType, ClassificationLevel classificationLevel)
+    public Map<String, BiElement<Species, AverageAndStandardDeviation>> calculateSpeciesAverageExpressionFor(SampleType sampleType,
+                                                                                                             ClassificationLevel classificationLevel)
+    {
+        return this.extractClassificationLevelKey(classificationLevel, this.calculateNormalizedSpeciesAverageExpression(sampleType, classificationLevel));
+    }
+
+    private Map<Species, AverageAndStandardDeviation> calculateNormalizedSpeciesAverageExpression(SampleType sampleType,
+                                                                                                  ClassificationLevel classificationLevel)
     {
         Map<Species, AverageAndStandardDeviation> speciesAverageExpression = this.calculateSpeciesAverageExpressionFor(sampleType);
 
@@ -65,7 +73,18 @@ public class PCLDataAnalyzerImpl implements PCLDataAnalyzer
                                                                                                                .filter(entry -> classificationLevel.equals(entry.getKey()
                                                                                                                                                                 .getClassificationLevel()))
                                                                                                                .collect(CollectorUtils.appendToMap(new HashMap<>()));
-        return this.normalize(filteredSpeciesToAverageExpression);
+        Map<Species, AverageAndStandardDeviation> normalizedSpeciesAverageExpression = this.normalize(filteredSpeciesToAverageExpression);
+        return normalizedSpeciesAverageExpression;
+    }
+
+    private Map<String, BiElement<Species, AverageAndStandardDeviation>> extractClassificationLevelKey(ClassificationLevel classificationLevel,
+                                                                                                       Map<Species, AverageAndStandardDeviation> speciesAverageExpression)
+    {
+        return speciesAverageExpression.entrySet()
+                                       .stream()
+                                       .map(MapperUtils.mapEntryToBiElement())
+                                       .collect(CollectorUtils.groupingByUnique(element -> classificationLevel.resolveValue(element.getFirst())
+                                                                                                              .replaceAll("_", " ")));
     }
 
     private Map<Species, AverageAndStandardDeviation> normalize(Map<Species, AverageAndStandardDeviation> speciesToAverageExpression)
@@ -99,7 +118,7 @@ public class PCLDataAnalyzerImpl implements PCLDataAnalyzer
     public Map<Species, AverageAndStandardDeviation> calculateSpeciesAverageExpressionFor(SampleType sampleType, ClassificationLevel classificationLevel,
                                                                                           Species speciesMatcher)
     {
-        Map<Species, AverageAndStandardDeviation> speciesAverageExpression = this.calculateSpeciesAverageExpressionFor(sampleType, classificationLevel);
+        Map<Species, AverageAndStandardDeviation> speciesAverageExpression = this.calculateNormalizedSpeciesAverageExpression(sampleType, classificationLevel);
 
         return speciesAverageExpression.entrySet()
                                        .stream()

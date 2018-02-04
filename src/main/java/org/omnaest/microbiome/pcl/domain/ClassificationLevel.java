@@ -1,23 +1,26 @@
 package org.omnaest.microbiome.pcl.domain;
 
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public enum ClassificationLevel
 {
-    KINGDOM(species -> species.getKingdom() != null && species.getPhylum() == null),
-    PHYLUM(species -> species.getPhylum() != null && species.getClassDef() == null),
-    CLASSDEF(species -> species.getClassDef() != null && species.getOrder() == null),
-    ORDER(species -> species.getOrder() != null && species.getFamily() == null),
-    FAMILY(species -> species.getFamily() != null && species.getGenus() == null),
-    GENUS(species -> species.getGenus() != null && species.getSpecies() == null),
-    SPECIES(species -> species.getSpecies() != null && species.getType() == null),
-    TYPE(species -> species.getType() != null);
+    KINGDOM(Species::getKingdom, Species::getPhylum),
+    PHYLUM(Species::getPhylum, Species::getClassDef),
+    CLASSDEF(Species::getClassDef, Species::getOrder),
+    ORDER(Species::getOrder, Species::getFamily),
+    FAMILY(Species::getFamily, Species::getGenus),
+    GENUS(Species::getGenus, Species::getSpecies),
+    SPECIES(Species::getSpecies, Species::getType),
+    TYPE(Species::getType, species -> null);
 
-    private Predicate<Species> criteria;
+    private Predicate<Species>        criteria;
+    private Function<Species, String> currentLevelValueResolver;
 
-    private ClassificationLevel(Predicate<Species> criteria)
+    private ClassificationLevel(Function<Species, String> currentLevelValueResolver, Function<Species, String> nextLevelValueResolver)
     {
-        this.criteria = criteria;
+        this.currentLevelValueResolver = currentLevelValueResolver;
+        this.criteria = ((Predicate<Species>) species -> currentLevelValueResolver.apply(species) != null).and(species -> nextLevelValueResolver.apply(species) == null);
 
     }
 
@@ -25,4 +28,10 @@ public enum ClassificationLevel
     {
         return this.criteria.test(species);
     }
+
+    public String resolveValue(Species species)
+    {
+        return this.currentLevelValueResolver.apply(species);
+    }
+
 }
