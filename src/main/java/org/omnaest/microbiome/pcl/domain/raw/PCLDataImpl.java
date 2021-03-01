@@ -2,7 +2,9 @@ package org.omnaest.microbiome.pcl.domain.raw;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.omnaest.microbiome.pcl.domain.PCLData;
 import org.omnaest.microbiome.pcl.domain.PCLDataAnalyzer;
@@ -43,4 +45,11 @@ public class PCLDataImpl implements PCLData
         return this.speciesIdToSpecies;
     }
 
+    @Override
+    public List<Species> getSpecies()
+    {
+        return this.speciesIdToSpecies.values()
+                                      .stream()
+                                      .collect(Collectors.toList());
+    }
 }

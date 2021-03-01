@@ -31,7 +31,12 @@ public enum ClassificationLevel
 
     public String resolveValue(Species species)
     {
-        return this.currentLevelValueResolver.apply(species);
+        String retval = null;
+        if (species != null)
+        {
+            retval = this.currentLevelValueResolver.apply(species);
+        }
+        return retval;
     }
 
 }
